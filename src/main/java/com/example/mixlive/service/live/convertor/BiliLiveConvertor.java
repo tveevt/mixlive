@@ -1,16 +1,14 @@
 package com.example.mixlive.service.live.convertor;
 
 import com.example.mixlive.client.bilibili.livestreamlist.ListDTO;
-import com.example.mixlive.client.bilibili.roomplayinfo.CodecDTO;
-import com.example.mixlive.client.bilibili.roomplayinfo.FormatDTO;
-import com.example.mixlive.client.bilibili.roomplayinfo.RoomPlayInfoResponse;
-import com.example.mixlive.client.bilibili.roomplayinfo.StreamDTO;
+import com.example.mixlive.client.bilibili.roomplayinfo.*;
 import com.example.mixlive.client.bilibili.search.LiveRoomDTOX;
 import com.example.mixlive.model.RoomInfo;
 import com.example.mixlive.model.RoomWithUserInfo;
 import com.example.mixlive.model.UserInfo;
 import one.util.streamex.StreamEx;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -71,7 +69,11 @@ public class BiliLiveConvertor {
     }
 
     public static Map<Object, String> toRealUrl(RoomPlayInfoResponse roomPlayInfoResponse) {
-        List<StreamDTO> streamDTOs = roomPlayInfoResponse.getData().getPlayurlInfo().getPlayurl().getStream();
+        PlayurlInfoDTO playurlInfoDTO = roomPlayInfoResponse.getData().getPlayurlInfo();
+        if (playurlInfoDTO == null) {
+            return Collections.emptyMap();
+        }
+        List<StreamDTO> streamDTOs = playurlInfoDTO.getPlayurl().getStream();
         StreamDTO streamDTO = StreamEx.of(streamDTOs)
                                       .reduce((first, second) -> second)
                                       .orElse(null);
