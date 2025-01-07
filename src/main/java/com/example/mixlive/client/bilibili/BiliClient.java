@@ -1,9 +1,12 @@
 package com.example.mixlive.client.bilibili;
 
+import cn.hutool.json.JSONUtil;
 import com.example.mixlive.client.bilibili.livestreamlist.LiveStreamListResponse;
+import com.example.mixlive.client.bilibili.playurl.PlayUrlResponse;
 import com.example.mixlive.client.bilibili.roomplayinfo.RoomPlayInfoResponse;
 import com.example.mixlive.client.bilibili.search.SearchResponse;
 import com.example.mixlive.client.bilibili.webarealist.WebAreaListResponse;
+import com.example.mixlive.platform.bilibili.convertor.BiliLiveConvertor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
@@ -62,6 +65,8 @@ public class BiliClient {
         return response.getBody();
     }
 
+
+    //从response中构建的部分stream-url长期有效但不支持较高画质
     public RoomPlayInfoResponse getRoomPlayInfo(Integer roomId) {
         String baseUrl = "https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo";
         String url = UriComponentsBuilder.fromHttpUrl(baseUrl)
@@ -75,10 +80,39 @@ public class BiliClient {
         return restTemplate.getForObject(url, RoomPlayInfoResponse.class);
     }
 
+    public PlayUrlResponse getPlayUrl(Integer roomId) {
+        return getPlayUrl(roomId, 4);
+    }
+
+
+    //从response中构建的stream-url短期有效并支持更高画质 重新开播后应该重新获取
+    public PlayUrlResponse getPlayUrl(Integer roomId, int qn) {
+        String baseUrl = "https://api.live.bilibili.com/room/v1/Room/playUrl";
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl)
+                                         .queryParam("cid", roomId)
+                                         .queryParam("qn", qn)
+                                         .queryParam("platform", "web")
+                                         .toUriString();
+        return restTemplate.getForObject(url, PlayUrlResponse.class);
+    }
+
     public static void main(String[] args) {
         BiliClient biliClient = new BiliClient(new RestTemplate());
-        RoomPlayInfoResponse roomPlayInfoResponse = biliClient.getRoomPlayInfo(21669525);
-        log.info(String.valueOf(roomPlayInfoResponse));
+        int roomId = 21669525;
+        RoomPlayInfoResponse roomPlayInfoResponse = biliClient.getRoomPlayInfo(roomId);
+
+        //log.info(String.valueOf(roomPlayInfoResponse));
+        log.info(JSONUtil.toJsonStr(roomPlayInfoResponse));
+        BiliLiveConvertor.toQualityStreamUrlsMap(roomPlayInfoResponse)
+                         .forEach((k, v) -> {
+                             System.out.println(k + " size: " + v.size());
+                             v.forEach(System.out::println);
+                         });
+
+        //PlayUrlResponse playUrl = biliClient.getPlayUrl(roomId);
+        //playUrl.getData().getDurl().forEach(durlDTO -> {
+        //    System.out.println(durlDTO.getUrl());
+        //});
     }
 
 }

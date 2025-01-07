@@ -2,11 +2,12 @@ package com.example.mixlive.client.douyu;
 
 import cn.hutool.json.JSONUtil;
 import com.example.mixlive.client.douyu.catetab.CateTab;
+import com.example.mixlive.client.douyu.h5play.H5PlayResponse;
 import com.example.mixlive.client.douyu.mixlistv1.MixListV1Response;
 import com.example.mixlive.client.douyu.newdirectory.NewDirectoryResponse;
 import com.example.mixlive.client.douyu.search.SearchShowResponse;
 import com.example.mixlive.client.douyu.streamurl.StreamUrlResponse;
-import com.example.mixlive.sign.DouyuSignProcessor;
+import com.example.mixlive.platform.douyu.service.sign.DouyuSignProcessor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
@@ -105,7 +106,7 @@ public class DouyuClient {
         return restTemplate.getForObject(url, SearchShowResponse.class);
     }
 
-    public String getRoomWebSourceById(Integer roomId) {
+    public String getRoomMobileWebSourceById(Integer roomId) {
         //https://m.douyu.com/8094748
         String url = "https://m.douyu.com/" + roomId;
         return restTemplate.getForObject(url, String.class);
@@ -116,7 +117,7 @@ public class DouyuClient {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-        String roomWebSource = getRoomWebSourceById(roomId);
+        String roomWebSource = getRoomMobileWebSourceById(roomId);
         long tt = Instant.now().getEpochSecond();
 
         String[] vAndSign = douyuSignProcessor.getVAndSign(roomWebSource, roomId, DEFAULT_DID, tt);
@@ -141,12 +142,61 @@ public class DouyuClient {
         return response.getBody();
     }
 
+    public String getRoomWebSourceById(Integer roomId) {
+        String url = "https://douyu.com/" + roomId;
+        return restTemplate.getForObject(url, String.class);
+    }
+
+    public H5PlayResponse getH5Play(Integer roomId) {
+        return getH5Play(roomId, false);
+    }
+
+    public H5PlayResponse getH5Play(Integer roomId, boolean onlyAudio) {
+        // 设置请求头
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        String roomWebSource = getRoomWebSourceById(roomId);
+        long tt = Instant.now().getEpochSecond();
+
+        String[] vAndSign = douyuSignProcessor.getVAndSign(roomWebSource, roomId, DEFAULT_DID, tt);
+
+        // 创建表单数据
+        MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
+        formData.add("v", vAndSign[0]);
+        formData.add("did", DEFAULT_DID);
+        formData.add("tt", String.valueOf(tt));
+        formData.add("sign", vAndSign[1]);
+        formData.add("ver", "22011191");
+        formData.add("rid", String.valueOf(roomId));
+        formData.add("rate", "-1");//画质 2=高清 3=超清 0=蓝光(APP专享)
+        if (onlyAudio) {
+            formData.add("fa", String.valueOf(1));
+        }
+
+        // 创建请求实体
+        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(formData, headers);
+
+        // 发送 POST 请求
+        String url = "https://www.douyu.com/lapi/live/getH5Play/";
+        url += roomId;
+        ResponseEntity<H5PlayResponse> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, H5PlayResponse.class);
+
+        return response.getBody();
+    }
+
+
     public static void main(String[] args) {
         DouyuClient douyuClient = new DouyuClient(new RestTemplate(), new DouyuSignProcessor());
 /*        List<CateTab> cateTabs = douyuClient.getCateTabs("/g_LOL");
         System.out.println(cateTabs);*/
-        StreamUrlResponse streamUrl = douyuClient.getStreamUrl(4238637);
+        int roomId = 10710592;
+        StreamUrlResponse streamUrl = douyuClient.getStreamUrl(roomId);
         System.out.println(streamUrl);
+        System.out.println(streamUrl.getData().getUrl());
+
+/*        H5PlayResponse h5Play = douyuClient.getH5Play(roomId, true);
+        System.out.println(h5Play);*/
 
     }
 }

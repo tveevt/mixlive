@@ -1,20 +1,26 @@
+#bilibili
 ###
-GET http://localhost:8080/live/categoryInfos
+GET http://localhost:8080/bilibili/categories
 
 ###
-GET http://localhost:8080/bilibili/category/roomInfos?parentAreaId=9&areaId=744&sort_type=online&page=2
+GET http://localhost:8080/bilibili/roomInfos?parentAreaId=9&areaId=744&sort_type=online&page=2
 
 ###
 GET http://localhost:8080/bilibili/search?keyword=lol&page=1
 
 ###
-GET http://localhost:8080/bilibili/realUrl/10112
+GET http://localhost:8080/bilibili/stream-url/26209385
+
+
+#douyu
+###
+GET http://localhost:8080/douyu/categories
 
 ###
-GET http://localhost:8080/douyu/category/roomInfos?categoryLevelAndId=2_1&page=1
+GET http://localhost:8080/douyu/roomInfos?categoryLevelAndId=2_1&page=1
 
 ###
 GET http://localhost:8080/douyu/search?keyword=lol&page=1
 
 ###
-GET http://localhost:8080/douyu/realUrl/288016
+GET http://localhost:8080/douyu/stream-url/10710592

@@ -1,10 +1,7 @@
-create table if not exists `platform_category_info`
+create table if not exists mixlive.platform_category
 (
-    platform_type varchar
-(
-    255
-) not null
-    primary key,
-    json longtext null
-    );
+    platform_type varchar(255) not null
+        primary key,
+    json_content  longtext     null
+);
 

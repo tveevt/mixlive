@@ -16,25 +16,25 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<String> illegalArgumentException(IllegalArgumentException e) {
-        return handleException(HttpStatus.BAD_REQUEST, e);
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, e);
     }
 
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<String> illegalStateException(IllegalStateException e) {
-        return handleException(HttpStatus.BAD_REQUEST, e);
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, e);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<String> handleAccessDeniedException(AccessDeniedException e) {
-        return handleException(HttpStatus.FORBIDDEN, e);
+        return buildErrorResponse(HttpStatus.FORBIDDEN, e);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> exception(Exception e) {
-        return handleException(HttpStatus.INTERNAL_SERVER_ERROR, e);
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, e);
     }
 
-    private static ResponseEntity<String> handleException(HttpStatus httpStatus, Exception e) {
+    private static ResponseEntity<String> buildErrorResponse(HttpStatus httpStatus, Exception e) {
         log.error(e.getMessage(), e);
         ErrorResponse errorResponse = new ErrorResponse(httpStatus.value(), e.toString());
         String jsonResponse = JSONUtil.toJsonStr(errorResponse);
